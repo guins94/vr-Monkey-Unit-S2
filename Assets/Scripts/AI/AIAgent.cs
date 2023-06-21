@@ -199,6 +199,11 @@ public class AIAgent : MonoBehaviour {
     {
         StopCoroutine("DrainRoutine");
     }
+
+    /// <summary>
+    /// Handles Shocks Events
+    /// Plays the Shock particle animation and Start ShockRoutine
+    /// </summary>
     public void OnShock(float stunTime)
     {
         StopAllCoroutines();
@@ -207,17 +212,18 @@ public class AIAgent : MonoBehaviour {
         StartCoroutine(ShockRoutine(stunTime));
     }
 
+    /// <summary>
+    /// Disables the IA whenever the enemy is hit in a shock for a time
+    /// </summary>
     public IEnumerator ShockRoutine(float time)
     {
         aiEnabled = false;
         yield return new WaitForSeconds(time);
         aiEnabled = true;
 
-       // target = StealthPlayerController.getInstance().transform;
-        //lastTargetPosition.position = target.position;
         searchLight.enabled = true;
+
         stunParticles.Stop();
-        //setState(chasingState);
     }
 
     public void SeeEnemy(Transform enemy)
