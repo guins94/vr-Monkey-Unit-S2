@@ -8,7 +8,7 @@ public class AIAgent : MonoBehaviour {
     public Transform target;
     public Transform lastTargetPosition;
 
-    public enum StateType { idle,chasing,seeking,damaged}
+    public enum StateType { idle,chasing,seeking }
     public StateType currentStateType = StateType.idle;
 
     IEnemyState currentState;
@@ -42,11 +42,13 @@ public class AIAgent : MonoBehaviour {
     public Transform patrolPost;
 
     public ParticleSystem stunParticles;
+    public ParticleSystem damageParticle;
+    private Coroutine lateDestroyRoutine = null;
     public Light searchLight;
     public StealthPlayerController player;
 
-    float maxLightRange;
-    float maxSightRange;
+    float maxLightRange = 10;
+    float maxSightRange = 10;
 
     public Renderer bodyRenderer;
 
@@ -57,6 +59,8 @@ public class AIAgent : MonoBehaviour {
 
     bool ignoreLoseSight = false;
     public Camera cam;
+    int blinkBeforeExplosion = 4;
+
     void Awake()
     {
         initialPosition = transform.position;
@@ -115,6 +119,7 @@ public class AIAgent : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        if (damageParticle != null) damageParticle.transform.position = transform.position;
         if (bodyRenderer.isVisible)
         {
             searchLight.enabled = true;
@@ -224,6 +229,96 @@ public class AIAgent : MonoBehaviour {
         searchLight.enabled = true;
 
         stunParticles.Stop();
+    }
+
+    /// <summary>
+    /// Handles Shoot Events
+    /// Plays the Shock particle animation and Start ShoootRoutine
+    /// </summary>
+    public void OnShoot(float damageTaken)
+    {
+        audioSource.PlayOneShot(AudioManager.getInstance().playerHit);
+        if (character.dead)
+        {
+            if (lateDestroyRoutine == null) lateDestroyRoutine = StartCoroutine(LateDestroy());
+            if (damageParticle != null) damageParticle.Stop();
+            return ;
+        }
+        StopAllCoroutines();
+        StartCoroutine(ShootRoutine(damageTaken));
+    }
+
+    /// <summary>
+    /// Plays the explosion sound and creates the explosion Effect
+    /// The Second part of the code is a simplification for a blinking eye before explosion
+    /// </summary>
+    private IEnumerator LateDestroy()
+    {
+        audioSource.PlayOneShot(AudioManager.getInstance().explosionEffect);
+        GameObject explosionEffect = GameObject.Instantiate(EffectsManager.getInstance().explosionEffect);
+        explosionEffect.transform.position = transform.position;
+
+        for (int i = 0; i <= blinkBeforeExplosion - 1; i++)
+        {
+            SetEnergyFraction(.2f);
+            yield return new WaitForSeconds(.2f);
+            SetEnergyFraction(1f);
+            yield return new WaitForSeconds(.2f);
+        }
+        SetEnergyFraction(0);
+        yield return new WaitForSeconds(1f);
+        Destroy(gameObject);
+    }
+
+    /// <summary>
+    /// Disables the enemy when the damage is higher than the enemy energy
+    /// </summary>
+    public IEnumerator ShootRoutine(float damageTaken)
+    {
+        if (character.energyLeft <= 0)
+        {
+            // Changes the Eye of the Agent to Damaged
+            eyeController.SetDamaged();
+            
+            // Disables a Agent Movement, Lights and Sight State
+            aiSight.setSightState(AISight.SightStates.disabled);
+            aiEnabled = false;
+            searchLight.enabled = false;
+            SetEnergyFraction(0);
+
+            // Plays the Agente Damaged particle system 
+            if (damageParticle == null)
+            {
+                damageParticle = GameObject.Instantiate(EffectsManager.getInstance().aiDamageEffect).GetComponent<ParticleSystem>();
+                damageParticle.transform.parent = transform;
+                damageParticle.Play();
+            } 
+
+            // Changes the State of the Agent for the previous state
+            currentState = previousState;
+
+            // Sets the Agent Status to dead and removes a chaser so the music stops playing
+            chasing = false;
+            GameLogic.instance.RemoveChaser();
+            character.dead = true;
+
+            yield return null;
+        }
+        else
+        {
+            // Removes the damage taken from the amount of energy left on the Agent
+            character.energyLeft -= damageTaken;
+
+            // The Agent Starts to follow the player knowing his position
+            Character playerCharacter = player as Character;
+            if (!chasing) aiSight.seeCharacter(playerCharacter);
+
+            // Plays the red damage effect
+            GameObject damageEffect = GameObject.Instantiate(EffectsManager.getInstance().damageEffect);
+            damageEffect.transform.position = transform.position;
+            yield return null;
+        }
+        
     }
 
     public void SeeEnemy(Transform enemy)
