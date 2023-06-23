@@ -8,6 +8,8 @@ public class EffectsManager : MonoBehaviour {
     public GameObject itemEffect;
     public GameObject shootEffect;
     public GameObject damageEffect;
+    public GameObject aiDamageEffect;
+    public GameObject explosionEffect;
 
     static EffectsManager _instance;
 
