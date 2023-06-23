@@ -63,6 +63,8 @@ public class StealthPlayerController : Character {
     public float shockCost = 10;
     public float drainSpeed = 0;
     public GameObject shockObject;
+    public float shootCost = 2f;
+    public float shootDelay = .25f;
 
     public GameObject drainObject;
     public float drainRange = 2;
@@ -78,6 +80,7 @@ public class StealthPlayerController : Character {
     public bool canShock = false;
     public bool canCloak = false;
     public bool canDrain = false;
+    public bool canShoot = false;
 
     public ParticleSystem warpParticles;
     
@@ -150,6 +153,13 @@ public class StealthPlayerController : Character {
     IEnumerator shockRoutine()
     {
         yield return new WaitForSeconds(shockDelay);
+        SetState(States.idle);
+    }
+
+    IEnumerator shootRoutine()
+    {
+        Fire();
+        yield return new WaitForSeconds(shootDelay);
         SetState(States.idle);
     }
 
@@ -231,6 +241,15 @@ public class StealthPlayerController : Character {
             GameObject thisShockObject = GameObject.Instantiate(shockObject);
             thisShockObject.transform.position = transform.position;
             StartCoroutine(shockRoutine());
+
+        }
+
+        if (canShoot && energy >= shootCost && Input.GetButtonDown("Shoot") && (state == States.idle || state == States.moving))
+        {
+
+            SpendEnergy(shootCost);
+            SetState(States.shooting);
+            StartCoroutine(shootRoutine());
 
         }
 
