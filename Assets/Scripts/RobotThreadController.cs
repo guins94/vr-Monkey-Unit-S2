@@ -21,7 +21,6 @@ public class RobotThreadController : MonoBehaviour {
         textureOffset= rendererMaterials[materialNumber].GetTextureOffset("_MainTex");
 
         audioSource = GetComponent<AudioSource>();
-
     }
 	
 	// Update is called once per frame
