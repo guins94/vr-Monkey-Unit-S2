@@ -35,11 +35,23 @@ public class DamageArea : MonoBehaviour {
 
 	void OnTriggerEnter(Collider col)
     {
-        Character colCharacter = col.GetComponent<Character>();
-        if(colCharacter!=null && colCharacter.friend != friend)
+        if (col.gameObject.CompareTag("Player"))
         {
-            colCharacter.DealDamage(damage);
-            DestroyBullet();
+            Character colCharacter = col.GetComponent<Character>();
+            if(colCharacter!=null && colCharacter.friend != friend)
+            {
+                colCharacter.DealDamage(damage);
+                DestroyBullet();
+            }
+        }
+        else
+        {
+            AIAgent colAIagent = col.GetComponent<AIAgent>();
+            if(colAIagent != null && col.GetComponent<Character>().friend != friend)
+            {
+                colAIagent.OnShoot(damage);
+                DestroyBullet();
+            }
         }
     }
 }
