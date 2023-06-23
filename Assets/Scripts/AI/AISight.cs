@@ -178,7 +178,7 @@ public class AISight : MonoBehaviour {
         return raycastResult;
     }
 
-    void seeCharacter(Character newSeenCharacter)
+    public void seeCharacter(Character newSeenCharacter)
     {
         seenCharacter = newSeenCharacter;
         setSightState(SightStates.seeingEnemy);
@@ -197,7 +197,7 @@ public class AISight : MonoBehaviour {
         }
     }
 
-    void tryUnseeCharacter()
+    public void tryUnseeCharacter()
     {
         if (Vector3.Distance(seenCharacter.transform.position, transform.position) > nearVisionDistance)
         {
@@ -209,7 +209,7 @@ public class AISight : MonoBehaviour {
         }
     }
 
-    void unseeCharacter()
+    public void unseeCharacter()
     {
         if (!aiAgent.aiEnabled && !testSight)
         {
