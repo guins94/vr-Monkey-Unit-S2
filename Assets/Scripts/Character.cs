@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Character : MonoBehaviour {
 
-    public enum States { idle,moving,hitStun,shocking,attacking,shooting}
+    public enum States { idle,moving,hitStun,shocking,attacking,shooting,hovering}
     public States state = States.idle;
     public bool dead = false;
     public bool hitStun = false;
