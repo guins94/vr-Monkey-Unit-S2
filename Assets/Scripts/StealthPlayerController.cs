@@ -15,6 +15,7 @@ public class StealthPlayerController : Character {
     Renderer cloakedRenderer;
 
     public bool hidden;
+    private float hoverMaxHeight = 0;
 
     [Header("Movement Speed")]
     Vector3 inputVector;
@@ -25,9 +26,9 @@ public class StealthPlayerController : Character {
     public float acceleration = 3.0f;
     public float maxSpeed = 5.0f;
     Vector3 speed = Vector3.zero;
-    float maxSpeedFraction = 0.0f;
 
     public RobotThreadController threadController;
+    public HoverSmokeController hoverSmokeController;
     public float threadWalkSpeed = 0.5f;
     public float threadRunSpeed = 0.75f;
 
@@ -65,6 +66,10 @@ public class StealthPlayerController : Character {
     public GameObject shockObject;
     public float shootCost = 2f;
     public float shootDelay = .25f;
+    public float hoverDrainCost = 2f;
+    public float hoverSpeed = .1f;
+    public bool hover = false;
+    public bool hoverCoolDown = false;
 
     public GameObject drainObject;
     public float drainRange = 2;
@@ -81,6 +86,8 @@ public class StealthPlayerController : Character {
     public bool canCloak = false;
     public bool canDrain = false;
     public bool canShoot = false;
+    public bool canHover = false;
+
 
     public ParticleSystem warpParticles;
     
@@ -109,6 +116,7 @@ public class StealthPlayerController : Character {
         {
             energyBar.SetInitialValues(maxEnergy, 0, energy);
         }
+        hoverMaxHeight = transform.position.y;
 	}
 	
     public void SetEnergy(float val)
@@ -193,6 +201,42 @@ public class StealthPlayerController : Character {
         }
     }
 
+    public IEnumerator HoveringRoutine()
+    {
+        audioSource.PlayOneShot(AudioManager.getInstance().airBreak);
+        while (energyLeft>0 && hover)
+        {
+            hover = !Input.GetButtonUp("Hover");
+            hoverSmokeController.hover = hover;
+            SpendEnergy(Time.deltaTime * hoverDrainCost);
+
+
+            moving = false;
+            inputVector = new Vector3(Input.GetAxis("Horizontal"), 1, Input.GetAxis("Vertical"));
+            inputVector = Vector3.ClampMagnitude(inputVector, 1.0f);
+            float camRotation = cam.transform.rotation.eulerAngles.y;
+            inputVector = getMovementDirection(inputVector, camRotation);
+
+            moving = true;
+            if (hoverMaxHeight >= transform.position.y) applyMovement(inputVector);
+            rotate(inputVector);
+            yield return null;
+        }
+
+        StartCoroutine(HoverCoolDown());
+        
+        SetState(States.idle);
+
+        IEnumerator HoverCoolDown()
+        {
+            
+            hoverCoolDown = true;
+            yield return new WaitForSeconds(2f);
+            hoverCoolDown = false;
+            
+        }
+    }
+
     // Update is called once per frame
     void Update() {
         if (GameLogic.instance.gameState != GameLogic.GameStates.gameplay)
@@ -253,6 +297,22 @@ public class StealthPlayerController : Character {
 
         }
 
+        if (canHover && !hoverCoolDown && Input.GetButtonDown("Hover") && (state == States.idle || state == States.moving))
+        {
+
+            hoverMaxHeight = transform.position.y + 1.1f;
+            hoverSmokeController.hover = true;
+            hover = true;
+            threadController.moving = false;
+            SetState(States.hovering);
+            StopMovement();
+            StartCoroutine(HoveringRoutine());
+
+        }
+
+        
+
+
         if (canCloak && Input.GetButtonDown("Cloak") && (state == States.idle || state == States.moving))
         {
             normalModel.SetActive(false);
@@ -280,7 +340,7 @@ public class StealthPlayerController : Character {
 
             moving = false;
             inputVector = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-            inputVector = Vector3.ClampMagnitude(inputVector, 1.0f);
+            inputVector = Vector3.ClampMagnitude(inputVector, 1f);
             float camRotation = cam.transform.rotation.eulerAngles.y;
             inputVector = getMovementDirection(inputVector, camRotation);
 
@@ -431,15 +491,14 @@ public class StealthPlayerController : Character {
         Vector3 newSpeed = Vector3.zero;
         if (infiniteAcceleration && direction.magnitude > 0.1f)
         {
-            newSpeed = speedToUse * new Vector3(direction.x, 0, direction.z);
+            newSpeed = speedToUse * new Vector3(direction.x, hoverSpeed, direction.z);
         }
         else {
-            newSpeed = Vector3.Lerp(speed, speedToUse * new Vector3(direction.x, 0, direction.z), acceleration * Time.deltaTime);
+            newSpeed = Vector3.Lerp(speed, speedToUse * new Vector3(direction.x, hoverSpeed, direction.z), acceleration * Time.deltaTime);
         }
-
-        maxSpeedFraction = newSpeed.magnitude / maxSpeed;
-
-        newSpeed = new Vector3(newSpeed.x, rb.velocity.y, newSpeed.z);
+        Debug.Log(newSpeed.y + rb.velocity.y);
+        
+        if (!hover) newSpeed = new Vector3(newSpeed.x, rb.velocity.y, newSpeed.z);
 
         speed = newSpeed;
 
