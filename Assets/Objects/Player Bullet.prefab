@@ -4921,9 +4921,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   friend: 0
-  damage: 15
+  damage: 5
   speed: 15
-  lifetime: 5
+  lifetime: 2.2
 --- !u!82 &4558409096283486445
 AudioSource:
   m_ObjectHideFlags: 0
