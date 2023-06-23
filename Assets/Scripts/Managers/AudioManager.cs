@@ -21,4 +21,5 @@ public class AudioManager : MonoBehaviour {
     public AudioClip enemyAlert;
     public AudioClip playerHit;
     public AudioClip explosionEffect;
+    public AudioClip airBreak;
 }
