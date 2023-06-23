@@ -28,6 +28,7 @@ public class GameLogic : MonoBehaviour {
     public GameObject ShockText;
     public GameObject CloakText;
     public GameObject DrainText;
+    public GameObject ShootText;
 
     public GameObject enemyContainer;
     public GameObject enemyModel;
@@ -199,6 +200,10 @@ public class GameLogic : MonoBehaviour {
             case Upgrade.Type.drain:
                 player.canDrain = true;
                 DrainText.SetActive(true);
+                break;
+            case Upgrade.Type.shoot:
+                player.canShoot = true;
+                ShootText.SetActive(true);
                 break;
         }
 

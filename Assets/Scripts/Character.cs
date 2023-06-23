@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Character : MonoBehaviour {
 
-    public enum States { idle,moving,hitStun,shocking,attacking}
+    public enum States { idle,moving,hitStun,shocking,attacking,shooting}
     public States state = States.idle;
     public bool dead = false;
     public bool hitStun = false;
@@ -39,8 +39,6 @@ public class Character : MonoBehaviour {
 
     public void Fire()
     {
-        //Debug.Log("Fire");
-
         GameObject fireEffect = GameObject.Instantiate(EffectsManager.getInstance().shootEffect);
         fireEffect.transform.position= transform.position + 0.3f * Vector3.up+0.2f*transform.forward;
         fireEffect.transform.forward = transform.forward;
