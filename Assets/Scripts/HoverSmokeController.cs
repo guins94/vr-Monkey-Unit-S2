@@ -25,15 +25,15 @@ public class HoverSmokeController : MonoBehaviour {
             {
                 audioSource.Play();
             }
-            if (hoverParticles != null ) hoverParticles.Play();
+            if (hoverParticles != null && !hoverParticles.isPlaying) hoverParticles.Play();
         }
         else
         {
             if (audioSource != null && audioSource.isPlaying)
             {
                 audioSource.Stop();
-                if (hoverParticles != null ) hoverParticles.Stop();
             }
+            if (hoverParticles != null && hoverParticles.isPlaying) hoverParticles.Stop();
         }
 	}
 }

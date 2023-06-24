@@ -203,7 +203,6 @@ public class StealthPlayerController : Character {
 
     public IEnumerator HoveringRoutine()
     {
-        audioSource.PlayOneShot(AudioManager.getInstance().airBreak);
         while (energyLeft>0 && hover)
         {
             hover = !Input.GetButtonUp("Hover");
@@ -218,10 +217,26 @@ public class StealthPlayerController : Character {
             inputVector = getMovementDirection(inputVector, camRotation);
 
             moving = true;
-            if (hoverMaxHeight >= transform.position.y) applyMovement(inputVector);
-            rotate(inputVector);
+            if (inputVector.magnitude > 0.1f)
+            {
+                if (hoverMaxHeight >= transform.position.y)
+                {
+                    applyMovement(inputVector);
+                } 
+                rotate(inputVector);
+            }
+            else
+            {
+                if (hoverMaxHeight >= transform.position.y)
+                {
+                    applyMovement(new Vector3(0, 1, 0));
+                } 
+            }
+            
             yield return null;
         }
+
+        audioSource.PlayOneShot(AudioManager.getInstance().airBreak);
 
         StartCoroutine(HoverCoolDown());
         
@@ -297,16 +312,20 @@ public class StealthPlayerController : Character {
 
         }
 
-        if (canHover && !hoverCoolDown && Input.GetButtonDown("Hover") && (state == States.idle || state == States.moving))
+        if (canHover && Input.GetButtonDown("Hover") && (state == States.idle || state == States.moving))
         {
-
-            hoverMaxHeight = transform.position.y + 1.1f;
-            hoverSmokeController.hover = true;
-            hover = true;
-            threadController.moving = false;
-            SetState(States.hovering);
-            StopMovement();
-            StartCoroutine(HoveringRoutine());
+            if (!hoverCoolDown)
+            {
+                hoverMaxHeight = transform.position.y + 1.1f;
+                hoverSmokeController.hover = true;
+                hover = true;
+                threadController.moving = false;
+                SetState(States.hovering);
+                StopMovement();
+                StartCoroutine(HoveringRoutine());
+            } 
+            else audioSource.PlayOneShot(AudioManager.getInstance().airBreak);
+            
 
         }
 
